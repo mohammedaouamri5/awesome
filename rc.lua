@@ -469,10 +469,10 @@ clientkeys = gears.table.join(
         { description = "close", group = "client" }),
     awful.key({ modkey, "Control" }, "space", awful.client.floating.toggle,
         { description = "toggle floating", group = "client" }),
-    awful.key({ modkey, "Control" }, "Return", function(c) c:swap(awful.client.etmaster()) end,
+    awful.key({ modkey, "Control" }, "Return", function(c) c:swap(awful.client.getmaster()) end,
         { description = "move to master", group = "client" }),
     awful.key({ modkey, }, "o", function(c) c:move_to_screen() end,
-        { description = "move to screen", group = "client" }),
+        { description = "move to screen", group = "client" })
 
 --  awful.key({ modkey, }, "t", function(c) c.ontop = not c.ontop end,
 --      { description = "toggle keep on top", group = "client" })
@@ -502,12 +502,6 @@ clientkeys = gears.table.join(
 --       end ,
 --       {description = "(un)maximize horizontally", group = "client"})
 
-  awful.key({ modkey, "Shift"   }, "m",
-      function (c)
-          c.maximized_horizontal = not c.maximized_horizontal
-          c:raise()
-      end ,
-      {description = "(un)maximize horizontally", group = "client"}), 
 )
 
 -- Bind all key numbers to tags.
