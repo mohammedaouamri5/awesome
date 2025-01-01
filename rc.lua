@@ -21,11 +21,11 @@ require("awful.hotkeys_popup.keys")
 
 
 -- This is used later as the default terminal and editor to run.
-terminal = "konsole"
-editor = os.getenv("EDITOR") or "nano"
+terminal   = "konsole"
+editor     = os.getenv("EDITOR") or "nano"
 editor_cmd = terminal .. " -e " .. editor
-SCRIPTS = "/home/mohammedaouamri/.scripts/"
-
+HOME       = "/home/mohammedaouamri"
+SCRIPTS    = HOME .. "/" .. ".scripts/"
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -56,9 +56,74 @@ do
 end
 -- }}}
 
+
+
+local function init_copyq()
+    local function is_copyq_running()
+        local handle = io.popen("pgrep -x copyq")
+        local result = handle:read("*a")
+        handle:close()
+        return result ~= ""
+    end
+
+    -- Spawn copyq if it's not already running
+    if not is_copyq_running() then
+        awful.spawn("copyq")
+    end
+end
+
+
+local function init_gromitmpx()
+    local function is_gromitmpx_running()
+        local handle = io.popen("pgrep -x gromit-mpx")
+        local result = handle:read("*a")
+        handle:close()
+        return result ~= ""
+    end
+
+    -- Spawn copyq if it's not already running
+    if not is_gromitmpx_running() then
+        awful.spawn("gromit-mpx")
+    end
+end
+
+
+local function init_flameshot()
+    local function is_flameshot_running()
+        local handle = io.popen("pgrep -x flameshot")
+        local result = handle:read("*a")
+        handle:close()
+        return result ~= ""
+    end
+
+    -- Spawn copyq if it's not already running
+    if not is_flameshot_running() then
+        awful.spawn("flameshot")
+    end
+end
+local function init()
+    beautiful.init("~/.config/awesome/monokai/theme.lua")
+
+    -- init-wallpaper
+    awful.spawn("zsh " .. HOME .. "/" .. ".fehbg");
+
+    -- init-clipboard
+    init_copyq()
+
+    -- init-gromit-mpx
+    init_gromitmpx()
+
+    -- init-screen-shoots
+    init_flameshot()
+end
+
+init()
+
+
+
+
 -- {{{ Variable definitions
--- Themes define colours, icons, font and wallpapers.
-beautiful.init("~/.config/awesome/monokai/theme.lua")
+-- Themes define colours, icns, font and wallpapers.
 
 
 -- Default modkey.
@@ -69,6 +134,7 @@ beautiful.init("~/.config/awesome/monokai/theme.lua")
 modkey = "Mod4"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
+--
 awful.layout.layouts = {
     awful.layout.suit.spiral,
     -- awful.layout.suit.tile,
@@ -143,6 +209,25 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 
 -- Keyboard map indicator and switcher
 mykeyboardlayout = awful.widget.keyboardlayout()
+mykeyboardlayout.layouts = { "fr", "ara" }
+local current_index = 1
+
+-- Function to cycle through layouts
+local function cycle_layout()
+    current_index = (current_index % #mykeyboardlayout.layouts) + 1
+    local next_layout = mykeyboardlayout.layouts[current_index]
+    os.execute("setxkbmap " .. next_layout)
+    -- mykeyboardlayout:set_layout(next_layout)
+end
+
+-- Add a button to cycle layouts on click
+mykeyboardlayout:buttons(
+    gears.table.join(
+        awful.button({}, 1, function() -- Left mouse button
+            cycle_layout()
+        end)
+    )
+)
 
 -- {{{ Wibar
 -- Create a textclock widget
@@ -264,7 +349,24 @@ awful.screen.connect_for_each_screen(function(s)
         font = "FiraCodeNerdFont 16"
     }
 
+    awful.spawn.with_line_callback(SCRIPTS .. "awesome" .. "/" .. "battery.sh", {
+        stdout = function(line)
+            battery_widget.text = line
+        end
+    })
 
+    local volum_widget = wibox.widget {
+        widget = wibox.widget.textbox,
+        -- align = "center",
+        valign = "center",
+        font = "FiraCodeNerdFont 16"
+    }
+
+    awful.spawn.with_line_callback(SCRIPTS .. "awesome" .. "/" .. "volum.sh", {
+        stdout = function(line)
+            volum_widget.text = line
+        end
+    })
 
     -- Periodically update the widget
     -- Add widgets to the wibox
@@ -284,6 +386,8 @@ awful.screen.connect_for_each_screen(function(s)
         --
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
+            volum_widget,
+            battery_widget,
             mykeyboardlayout,
             wibox.widget.systray(),
             mytextclock,
@@ -332,6 +436,11 @@ globalkeys = gears.table.join(
 
     -- Layout manipulation
 
+    awful.key({ modkey, }, "v", function()
+            init_copyq();
+            awful.spawn("copyq show")
+        end,
+        { description = "show the clipboard", group = "clipboard" }),
     awful.key({ modkey, }, "u", awful.client.urgent.jumpto,
         { description = "jump to urgent client", group = "client" }),
     awful.key({ modkey, }, "Tab",
@@ -454,7 +563,7 @@ globalkeys = gears.table.join(
         end,
         { description = "lua execute prompt", group = "awesome" }),
     -- Menubar
-    awful.key({ modkey }, "p", function() menubar.show() end,
+    awful.key({ modkey }, "p", function() awful.spawn("flameshot gui") end,
         { description = "show the menubar", group = "launcher" })
 )
 
