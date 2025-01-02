@@ -231,7 +231,7 @@ mykeyboardlayout:buttons(
 
 -- {{{ Wibar
 -- Create a textclock widget
-mytextclock = wibox.widget.textclock()
+mytextclock = wibox.widget.textclock("   |   %b %d %a %I:%M")
 
 
 -- Create a wibox for each screen and add it
